@@ -7,7 +7,7 @@
 #include <mutex>
 #include <algorithm>
 #include "board.h"
-#include "computer.h"  // Jeœli potrzebny – w trybie turowym gracz serwera gra rêcznie
+#include "computer.h"  // JeÅ›li potrzebny â€“ w trybie turowym gracz serwera gra rÄ™cznie
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -16,11 +16,11 @@ using boost::asio::ip::tcp;
 // Sekcja dla klasycznego serwera (broadcast, handle_client, run_server)
 // ===============================
 
-// Globalna lista wskaŸników na obiekty socketów klientów
+// Globalna lista wskaÅºnikÃ³w na obiekty socketÃ³w klientÃ³w
 std::vector<tcp::socket*> clients;
 std::mutex clients_mutex;
 
-// Funkcja rozsy³aj¹ca wiadomoœæ do wszystkich pod³¹czonych klientów poza Ÿród³em
+// Funkcja rozsyÅ‚ajÄ…ca wiadomoÅ›Ä‡ do wszystkich podÅ‚Ä…czonych klientÃ³w poza ÅºrÃ³dÅ‚em
 void broadcast(const std::string& message, tcp::socket* source) {
     std::lock_guard<std::mutex> lock(clients_mutex);
     for (auto client : clients) {
@@ -31,13 +31,13 @@ void broadcast(const std::string& message, tcp::socket* source) {
     }
 }
 
-// Funkcja obs³uguj¹ca pojedynczego klienta (wywo³ywana w osobnym w¹tku)
+// Funkcja obsÅ‚ugujÄ…ca pojedynczego klienta (wywoÅ‚ywana w osobnym wÄ…tku)
 void handle_client(tcp::socket* socket) {
     try {
         boost::asio::streambuf buffer;
         while (true) {
             boost::system::error_code error;
-            // Odczytujemy dane a¿ do znaku nowej linii ("\n")
+            // Odczytujemy dane aÅ¼ do znaku nowej linii ("\n")
             std::size_t len = boost::asio::read_until(*socket, buffer, "\n", error);
             if (error) {
                 std::cerr << "Blad odczytu: " << error.message() << std::endl;
@@ -51,7 +51,7 @@ void handle_client(tcp::socket* socket) {
                 continue;
 
             std::cout << "Otrzymano ruch: " << line << std::endl;
-            // Rozsy³amy odebran¹ wiadomoœæ do innych klientów
+            // RozsyÅ‚amy odebranÄ… wiadomoÅ›Ä‡ do innych klientÃ³w
             broadcast(line + "\n", socket);
         }
     }
@@ -59,7 +59,7 @@ void handle_client(tcp::socket* socket) {
         std::cerr << "Wyjatek w obsludze klienta: " << e.what() << std::endl;
     }
 
-    // Po roz³¹czeniu klienta usuwamy jego socket z listy
+    // Po rozÅ‚Ä…czeniu klienta usuwamy jego socket z listy
     {
         std::lock_guard<std::mutex> lock(clients_mutex);
         auto it = std::find(clients.begin(), clients.end(), socket);
@@ -71,15 +71,15 @@ void handle_client(tcp::socket* socket) {
     delete socket;
 }
 
-// Funkcja uruchamiaj¹ca serwer LAN (tryb broadcast)
+// Funkcja uruchamiajÄ…ca serwer LAN (tryb broadcast)
 void run_server() {
     try {
         boost::asio::io_context io_context;
-        // Nas³uchujemy na porcie 5000
+        // NasÅ‚uchujemy na porcie 5000
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 5000));
         std::cout << "Serwer uruchomiony, nasluchiwanie na porcie 5000..." << std::endl;
 
-        // Nieskoñczona pêtla przyjmuj¹ca nowe po³¹czenia
+        // NieskoÅ„czona pÄ™tla przyjmujÄ…ca nowe poÅ‚Ä…czenia
         while (true) {
             tcp::socket* socket = new tcp::socket(io_context);
             acceptor.accept(*socket);
@@ -89,7 +89,7 @@ void run_server() {
                 clients.push_back(socket);
             }
 
-            // Uruchamiamy obs³ugê klienta w osobnym w¹tku
+            // Uruchamiamy obsÅ‚ugÄ™ klienta w osobnym wÄ…tku
             std::thread(handle_client, socket).detach();
         }
     }
@@ -102,7 +102,7 @@ void run_server() {
 // Funkcja do gry LAN w trybie turowym (pojedynczy klient)
 // ===============================
 
-void playTurnBasedLanServer() {
+void playTurnBasedLanServer(atomic<char>* fen) {
     try {
         boost::asio::io_context io_context;
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 5000));
@@ -112,15 +112,20 @@ void playTurnBasedLanServer() {
         acceptor.accept(socket);
         std::cout << "Klient podlaczony!" << std::endl;
 
-        // Inicjalizacja planszy – standardowy uk³ad startowy
+        // Inicjalizacja planszy â€“ standardowy ukÅ‚ad startowy
         ChessBoard board;
         board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-        // £añcuch promocji – jeœli ruch ma 5 znaków, ostatni oznacza promocje
+        // ÅaÅ„cuch promocji â€“ jeÅ›li ruch ma 5 znakÃ³w, ostatni oznacza promocje
         std::string promotion_board = " KPNBRQ  kpnbrq";
 
         while (true) {
             // --- TURA SERWERA (gracz1) ---
+            string fen_string = board.get_fen();
+            for (int i = 0; i < fen_string.size(); i++)
+                fen[i] = fen_string[i];
+
+            fen[fen_string.size()] = '\n';
             board.visualise();
             std::cout << "Twoj ruch: ";
             std::string move_str;
@@ -144,16 +149,22 @@ void playTurnBasedLanServer() {
             }
             board.move(move);
 
-            // Po ruchu serwera – jeœli ju¿ brak legalnych ruchów, serwer wygrywa
+            // Po ruchu serwera â€“ jeÅ›li juÅ¼ brak legalnych ruchÃ³w, serwer wygrywa
             if (board.generate_moves().empty()) {
+                fen_string = board.get_fen();
+                for (int i = 0; i < fen_string.size(); i++)
+                    fen[i] = fen_string[i];
+
+                fen[fen_string.size()] = '\n';
+
                 board.visualise();
                 std::cout << "Gra zakonczona. Wygrywasz!" << std::endl;
-                std::string msg = "LOSE: Gra zakonczona. Przegrywasz.\n";  // klient otrzyma komunikat, ¿e przegra³
+                std::string msg = "LOSE: Gra zakonczona. Przegrywasz.\n";  // klient otrzyma komunikat, Å¼e przegraÅ‚
                 boost::asio::write(socket, boost::asio::buffer(msg));
                 break;
             }
 
-            // Wysy³amy aktualny stan planszy (FEN) do klienta
+            // WysyÅ‚amy aktualny stan planszy (FEN) do klienta
             std::string fen = board.get_fen();
             fen += "\n";
             boost::asio::write(socket, boost::asio::buffer(fen));
@@ -192,8 +203,13 @@ void playTurnBasedLanServer() {
                 board.move(client_move);
             }
 
-            // Po ruchu klienta – jeœli brak legalnych ruchów, oznacza to zwyciêstwo klienta
+            // Po ruchu klienta â€“ jeÅ›li brak legalnych ruchÃ³w, oznacza to zwyciÄ™stwo klienta
             if (board.generate_moves().empty()) {
+                fen_string = board.get_fen();
+                for (int i = 0; i < fen_string.size(); i++)
+                    fen[i] = fen_string[i];
+
+                fen[fen_string.size()] = '\n';
                 board.visualise();
                 std::cout << "Gra zakonczona. Przegrywasz!" << std::endl;
                 std::string winMsg = "WIN: Gra zakonczona. Wygrywasz.\n";
