@@ -68,7 +68,7 @@ to avoid any problems while including glad and GLFW3 libraries it is advised to 
 -than add all of the .cpp files to visual studio source files  
 -add all of the .h files to visual studio header files  
 
-# Graphisc:
+# Graphic:
 -in visual studio solution explorer look for "Resource Files"  
 -there create two new filters called "Shaders" and "Textures"  
 -in "Shaders" add two existing files called "default.vert" and "default.frag"  
