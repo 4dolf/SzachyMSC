@@ -3,13 +3,13 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <string>
-#include "board.h"  // Plik powinien definiowaæ klasê ChessBoard oraz metody: from_fen(), get_fen(), visualise(), generate_moves(), itd.
+#include "board.h"  // Plik powinien definiowaÄ‡ klasÄ™ ChessBoard oraz metody: from_fen(), get_fen(), visualise(), generate_moves(), itd.
 
 using namespace std;
 using namespace boost::asio;
 using ip::tcp;
 
-void playTurnBasedLanClient() {
+void playTurnBasedLanClient(atomic<char>* fen) {
     try {
         io_context ioContext;
         tcp::resolver resolver(ioContext);
@@ -30,8 +30,8 @@ void playTurnBasedLanClient() {
             if (message.empty())
                 continue;
 
-            // Rozró¿niamy odebrane komunikaty:
-            // Komunikat b³êdu
+            // RozrÃ³Å¼niamy odebrane komunikaty:
+            // Komunikat bÅ‚Ä™du
             if (message.rfind("ERR:", 0) == 0) {
                 cout << "Serwer: " << message << endl;
                 cout << "Twoj ruch: ";
@@ -41,24 +41,29 @@ void playTurnBasedLanClient() {
                 boost::asio::write(socket, boost::asio::buffer(new_move));
                 continue;
             }
-            // Komunikat o przegranej klienta (czyli serwer wygra³)
+            // Komunikat o przegranej klienta (czyli serwer wygraÅ‚)
             else if (message.rfind("LOSE:", 0) == 0) {
                 cout << "Serwer: " << message << endl;
-                // Klient wie, ¿e przegra³ – koñczy rozgrywkê
+                // Klient wie, Å¼e przegraÅ‚ â€“ koÅ„czy rozgrywkÄ™
                 break;
             }
-            // Komunikat o zwyciêstwie klienta
+            // Komunikat o zwyciÄ™stwie klienta
             else if (message.rfind("WIN:", 0) == 0) {
                 cout << "Serwer: " << message << endl;
                 break;
             }
             else {
-                // Jeœli to nie jest specjalny komunikat, to traktujemy wiadomoœæ jako ci¹g FEN
+                // JeÅ›li to nie jest specjalny komunikat, to traktujemy wiadomoÅ›Ä‡ jako ciÄ…g FEN
                 board.from_fen(message);
+                string fen_string = board.get_fen();
+                for (int i = 0; i < fen_string.size(); i++)
+                    fen[i] = fen_string[i];
+
+                fen[fen_string.size()] = '\n';
                 board.visualise();
             }
 
-            // Sprawdzamy, czy gra zakoñczona (brak legalnych ruchów)
+            // Sprawdzamy, czy gra zakoÅ„czona (brak legalnych ruchÃ³w)
             if (board.generate_moves().empty()) {
                 cout << "Gra zakonczona." << endl;
                 break;
