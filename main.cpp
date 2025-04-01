@@ -17,7 +17,7 @@
 #include"EBO.h"
 
 #define PNG_SIZE 800
-
+int C;
 
 
 VAO genVAOBackground() {
@@ -529,15 +529,15 @@ int draw_board(std::atomic<char>* fen)
 
 using namespace std;
 
-// Funkcja testowa ñ do sprawdzenia dzia≥ania klasy ChessBoard
+// Funkcja testowa ‚Äì do sprawdzenia dzia≈Çania klasy ChessBoard
 int test()
 {
     // Tworzenie szachownicy
     ChessBoard board;
 
-    // Za≥adowanie pozycji startowej (przyk≥ad z FEN)
+    // Za≈Çadowanie pozycji startowej (przyk≈Çad z FEN)
     board.from_fen("rnbqkb1r/pp3p1p/3p2p1/2pP3n/7P/2N2P2/PP2P1P1/R1BQKBNR w KQkq - 1 8");
-    board.visualise(); // Wyúwietlenie szachownicy w terminalu
+    board.visualise(); // Wy≈õwietlenie szachownicy w terminalu
 
     auto chess_move = board.encode_move(piece_no_color_t::pawn, 12, 28);
     board.move(chess_move);
@@ -599,6 +599,8 @@ void playBot(atomic<char>* fen) {
 
     fen[fen_string.size()] = '\n';
 
+	
+
     while (true)
     {
         cin >> move_string;
@@ -631,7 +633,7 @@ void playBot(atomic<char>* fen) {
 
             computer.play_move_on_board(move_);
 
-            pair<move_t, int> output = computer.deapening_search(chrono::milliseconds(5000));
+            pair<move_t, int> output = computer.deapening_search(chrono::milliseconds(C));
 
             computer.play_move_on_board(output.first);
 
@@ -659,12 +661,12 @@ void playBot(atomic<char>* fen) {
 }
 
 // Deklaracje nowych funkcji rozgrywki LAN dla trybu turowego
-void playTurnBasedLanServer();
-void playTurnBasedLanClient();
+void playTurnBasedLanServer(atomic<char>*fen);
+void playTurnBasedLanClient(atomic<char>*fen);
 
 int main() {
     atomic<char> fen[200];
-	string fen_string = "rnbqkb1r/pp3p1p/3p2p1/2pP3n/7P/2N2P2/PP2P1P1/R1BQKBNR w KQkq - 1 8";
+	string fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	for (int i = 0; i < fen_string.size(); i++)
 		fen[i] = fen_string[i];
 
@@ -682,7 +684,33 @@ int main() {
 
     if (gameMode == "bot") {
         cout << "Wybrano tryb gry z botem." << endl;
-        playBot(fen);
+		cout << "Wybierz poziom trudno≈õci bota." << endl;
+		cout << "Poziomy trudno≈õci. 1440, 1620, 1780, 1930, 2060" << endl;
+		int liczba44;
+		cin >> liczba44;
+		if (liczba44 == 1440) {
+			C = 1;
+			playBot(fen);
+		}
+		else if (liczba44 == 1620) {
+			C = 10;
+			playBot(fen);
+		}
+		else if (liczba44 == 1780) {
+			C = 100;
+			playBot(fen);
+		}
+		else if (liczba44 == 1930) {
+			C = 1000;
+			playBot(fen);
+		}
+		else if (liczba44 == 2060) {
+			C = 5000;
+			playBot(fen);
+		}
+		else {
+			cout << "Nie ma takiego poziomu trudno≈õci" << endl;
+		}
     }
     else if (gameMode == "lan") {
         string netMode;
@@ -691,18 +719,18 @@ int main() {
 
         if (netMode == "server") {
             cout << "Uruchamiam serwer LAN (tryb turowy)..." << endl;
-            playTurnBasedLanServer();
+            playTurnBasedLanServer(fen);
         }
         else if (netMode == "client") {
             cout << "Uruchamiam klienta LAN (tryb turowy)..." << endl;
-            playTurnBasedLanClient();
+            playTurnBasedLanClient(fen);
         }
         else {
-            cout << "Wybrano niepoprawny tryb po≥πczenia." << endl;
+            cout << "Wybrano niepoprawny tryb po≈ÇƒÖczenia." << endl;
         }
     }
     else {
-        cout << "Nieznany tryb gry. KoÒczÍ dzia≥anie." << endl;
+        cout << "Nieznany tryb gry. Ko≈Ñczƒô dzia≈Çanie." << endl;
     }
 
     return 0;
