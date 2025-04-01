@@ -7,6 +7,7 @@
 
 
 # Known Issues:  
+-our program works with Visual Studio 2022  
 -our program does not work with Visual Studio Code  
 -our program uses Standard ISO C++20 (/std:c++20)  
 -while creating std.cpp you compile it more than once it could not work (that does not mean you need to delete it)  
@@ -24,7 +25,7 @@ to avoid any problems while including glad and GLFW3 libraries it is advised to 
 -(https://github.com/Kitware/CMake/releases/download/v4.0.0/cmake-4.0.0-windows-x86_64.msi) for Windows x64.  
 -(https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.zip)  
 -(https://glad.dav1d.de/) API gl version 4.5 Profle core.  
- -extract glfw-3.4 folder form glfw-3.4.zip.  
+-extract glfw-3.4 folder form glfw-3.4.zip.  
  ## Run cmake:  
   -use the glfw-3.4 folder as a source code.  
   -next we need a build path which we will make ourselfs.  
@@ -34,7 +35,8 @@ to avoid any problems while including glad and GLFW3 libraries it is advised to 
   -now when another window showed up use default settings and click finish.  
   -new settings should pop up on cmake and you still want to use deafult settings as your choise.  
   -click on configure than generate and wait fo it to finish.  
- -now go to C:path/to/your/folder/glfw-3.4/build folder next and from it open GLFW.sln in Visual Studio.  
+ ## In Visual Studio
+ -go to C:path/to/your/folder/glfw-3.4/build folder next and from it open GLFW.sln in Visual Studio.  
  -in Visual Studio Solution Sxplorer right click on your GLFW solution file and select Build Solution or click f7.  
  -open glfw folder than src and debug.  
  -copy glfw3.lib file in to your lib folder 
