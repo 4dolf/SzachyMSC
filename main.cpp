@@ -139,28 +139,45 @@ int draw_board(std::atomic<char>* fen)
 
 	//Texture
 
+
+	// Load texture dimensions and channels
 	int widthbB, heightbB, monColChbB;
+
+	// Set the flag to flip the texture vertically when loaded (because OpenGL expects texture data origin at the bottom-left corner)
 	stbi_set_flip_vertically_on_load(true);
+
+	// Load the texture "bB.png" into memory
 	unsigned char* bytes = stbi_load("bB.png", &widthbB, &heightbB, &monColChbB, 0);
 
+	// Generate a texture ID for the "bB.png" texture
 	GLuint texturebB;
 	glGenTextures(1, &texturebB);
+
+	// Activate the texture unit 0 (bind it as the current active texture)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texturebB);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// Set texture filtering for scaling up (magnification) and scaling down (minification)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Nearest-neighbor filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Nearest-neighbor filtering
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// Set texture wrapping modes (how the texture is applied when UV coordinates are out of bounds)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Repeat horizontally (S-axis)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Repeat vertically (T-axis)
 
+	// Send the texture data to the GPU
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, widthbB, heightbB, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes);
+
+	// Generate mipmaps for the texture (used for performance at different zoom levels)
 	glGenerateMipmap(GL_TEXTURE_2D);
 
+	// Free the memory for the texture data as it has been sent to the GPU
 	stbi_image_free(bytes);
+
+	// Unbind the texture to prevent accidental modifications
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-
+	//all of the next GL texture units work the same but for different textures
 
 	int widthbK, heightbK, monColChbK;
 	stbi_set_flip_vertically_on_load(true);
@@ -441,7 +458,7 @@ int draw_board(std::atomic<char>* fen)
 	shaderProgram.Activate();
 	glUniform1i(tex0Uni, 0);
 
-	// Main while loop
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window)) {
 
@@ -470,41 +487,53 @@ int draw_board(std::atomic<char>* fen)
 		VAO2.Bind();
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw first quad
 
-		// --- Render first texture (bB.png) ---
-		for (int x = 0; x < 8; x++) {
-			for (int y = 0; y < 8; y++) {
+		// --- Render textures ---
+		for (int x = 0; x < 8; x++) { // Loop through each column of the chessboard
+			for (int y = 0; y < 8; y++) { // Loop through each row of the chessboard
+
+				// Check the type of piece at the current position
+				// If the square is empty, skip rendering
 				if (board.get_piece_type(x + (y * 8)) == piece_t::empty)
 					continue;
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_bishop)
-					glBindTexture(GL_TEXTURE_2D, texturebB); // Bind bB.png texture
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_king)
-					glBindTexture(GL_TEXTURE_2D, texturebK); // Bind bK.png texture
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_knight)
-					glBindTexture(GL_TEXTURE_2D, texturebN); // Bind bN.png texture
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_pawn)
-					glBindTexture(GL_TEXTURE_2D, texturebp); // Bind bp.png texture
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_queen)
-					glBindTexture(GL_TEXTURE_2D, texturebQ);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_rook)
-					glBindTexture(GL_TEXTURE_2D, texturebR);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_bishop)
-					glBindTexture(GL_TEXTURE_2D, texturewB);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_king)
-					glBindTexture(GL_TEXTURE_2D, texturewK);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_knight)
-					glBindTexture(GL_TEXTURE_2D, texturewN);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_pawn)
-					glBindTexture(GL_TEXTURE_2D, texturewp);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_queen)
-					glBindTexture(GL_TEXTURE_2D, texturewQ);
-				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_rook)
-					glBindTexture(GL_TEXTURE_2D, texturewR);
 
+				// Bind the appropriate texture based on the type of piece
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_bishop)
+					glBindTexture(GL_TEXTURE_2D, texturebB); // Bind black bishop texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_king)
+					glBindTexture(GL_TEXTURE_2D, texturebK); // Bind black king texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_knight)
+					glBindTexture(GL_TEXTURE_2D, texturebN); // Bind black knight texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_pawn)
+					glBindTexture(GL_TEXTURE_2D, texturebp); // Bind black pawn texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_queen)
+					glBindTexture(GL_TEXTURE_2D, texturebQ); // Bind black queen texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::black_rook)
+					glBindTexture(GL_TEXTURE_2D, texturebR); // Bind black rook texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_bishop)
+					glBindTexture(GL_TEXTURE_2D, texturewB); // Bind white bishop texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_king)
+					glBindTexture(GL_TEXTURE_2D, texturewK); // Bind white king texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_knight)
+					glBindTexture(GL_TEXTURE_2D, texturewN); // Bind white knight texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_pawn)
+					glBindTexture(GL_TEXTURE_2D, texturewp); // Bind white pawn texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_queen)
+					glBindTexture(GL_TEXTURE_2D, texturewQ); // Bind white queen texture
+				else if (board.get_piece_type(x + (y * 8)) == piece_t::white_rook)
+					glBindTexture(GL_TEXTURE_2D, texturewR); // Bind white rook texture
+
+				// Generate a Vertex Array Object (VAO) for the current piece position
+				// This ensures each piece is correctly positioned on the board
 				VAO VAO1 = genVAO(x, y);
+
+				// Bind the VAO to prepare for rendering
 				VAO1.Bind();
-				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw first quad
+
+				// Draw the piece as two triangles forming a quad
+				glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw the current quad
 			}
 		}
+
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -578,86 +607,114 @@ int test()
 }
 
 
-// Funkcja gry z botem
+// --- Funkcja gry z botem ---
 void playBot(atomic<char>* fen) {
-    ChessBoard board;
-    board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	// Initialize the chessboard with the default starting position using FEN notation
+	ChessBoard board;
+	board.from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    move_t move_;
-    string move_string;
-    string promotion_board = " KPNBRQ  kpnbrq";
+	// Initialize variables for moves and promotion handling
+	move_t move_; // Represents the move being played
+	string move_string; // Stores the move entered by the player
+	string promotion_board = " KPNBRQ  kpnbrq"; // Defines promotion options for pawns
 
-    Computer computer;
-    computer.set_board(board);
+	// Create a bot (computer player) and set the board state
+	Computer computer;
+	computer.set_board(board);
 
-    int promotion = 0;
-    board.visualise();
+	// Promotion flag (used for pawn promotion)
+	int promotion = 0;
 
-    string fen_string = board.get_fen();
-    for (int i = 0; i < fen_string.size(); i++)
-        fen[i] = fen_string[i];
+	// Visualize the initial chessboard state
+	board.visualise();
 
-    fen[fen_string.size()] = '\n';
+	// Convert the board state to FEN notation for display purposes
+	string fen_string = board.get_fen();
+	for (int i = 0; i < fen_string.size(); i++)
+		fen[i] = fen_string[i];
 
-	
+	// Append the newline character to the FEN string
+	fen[fen_string.size()] = '\n';
 
-    while (true)
-    {
-        cin >> move_string;
-        if (move_string.size() == 5)
-            promotion = (int)promotion_board.find(move_string[4]);
+	// --- Main Game Loop ---
+	while (true)
+	{
+		// Player enters a move string (e.g., e2e4, e7e8q for promotion)
+		cin >> move_string;
 
-        auto piece = board.get_piece_type(((int)move_string[1] - '1') * 8 + ((int)move_string[0] - 'a'));
+		// Check if the player entered a promotion move (5 characters, e.g., "e7e8q")
+		if (move_string.size() == 5)
+			promotion = (int)promotion_board.find(move_string[4]); // Find promotion piece type
 
-        move_ = board.encode_move((piece_no_color_t)(((int)piece) % 8),
-            ((int)move_string[1] - '1') * 8 + ((int)move_string[0] - 'a'),
-            ((int)move_string[3] - '1') * 8 + ((int)move_string[2] - 'a'),
-            (piece_t)promotion);
+		// Get the type of piece from the starting square
+		auto piece = board.get_piece_type(((int)move_string[1] - '1') * 8 + ((int)move_string[0] - 'a'));
 
-        vector<move_t> moves = board.generate_moves();
-        if (find(moves.begin(), moves.end(), move_) != moves.end()) {
-            board.move(move_);
-            board.visualise();
+		// Encode the move (convert it to the board's internal representation)
+		move_ = board.encode_move(
+			(piece_no_color_t)(((int)piece) % 8), // Remove color information from the piece type
+			((int)move_string[1] - '1') * 8 + ((int)move_string[0] - 'a'), // Starting square
+			((int)move_string[3] - '1') * 8 + ((int)move_string[2] - 'a'), // Target square
+			(piece_t)promotion // Promotion type (if any)
+		);
 
-            fen_string = board.get_fen();
-            for (int i = 0; i < fen_string.size(); i++)
-                fen[i] = fen_string[i];
+		// Generate all legal moves for the player
+		vector<move_t> moves = board.generate_moves();
 
-            fen[fen_string.size()] = '\n';
+		// Check if the entered move is legal
+		if (find(moves.begin(), moves.end(), move_) != moves.end()) {
+			// If the move is valid, apply it to the board
+			board.move(move_);
+			board.visualise();
 
-            if (board.generate_moves().empty())
-            {
-                cout << "You win!" << endl;
-                return;
-            }
+			// Update the FEN string for the new board state
+			fen_string = board.get_fen();
+			for (int i = 0; i < fen_string.size(); i++)
+				fen[i] = fen_string[i];
 
-            computer.play_move_on_board(move_);
+			fen[fen_string.size()] = '\n';
 
-            pair<move_t, int> output = computer.deapening_search(chrono::milliseconds(C));
+			// Check if the bot has no legal moves (win condition for the player)
+			if (board.generate_moves().empty())
+			{
+				cout << "You win!" << endl;
+				return; // Exit the game
+			}
 
-            computer.play_move_on_board(output.first);
+			// Bot plays the player's move on its internal representation of the board
+			computer.play_move_on_board(move_);
 
-            cout << "eval: " << output.second << endl;
+			// Perform bot search for the best move using deepening search with a time constraint
+			pair<move_t, int> output = computer.deapening_search(chrono::milliseconds(C)); // C is the difficulty level/time limit
 
-            board.move(output.first);
-            board.visualise();
+			// Bot applies the chosen move to its internal board representation
+			computer.play_move_on_board(output.first);
 
-            fen_string = board.get_fen();
-            for (int i = 0; i < fen_string.size(); i++)
-                fen[i] = fen_string[i];
+			// Display evaluation score of the bot's chosen move
+			cout << "eval: " << output.second << endl;
 
-            fen[fen_string.size()] = '\n';
+			// Apply the bot's move to the actual chessboard
+			board.move(output.first);
+			board.visualise();
 
-            if (board.generate_moves().empty())
-            {
-                cout << "You lose! hahahhahaha" << endl;
-                return;
-            }
-        }
-        else {
-            cout << "illigal move" << endl;
-        }
-    }
+			// Update the FEN string again for the updated state after the bot's move
+			fen_string = board.get_fen();
+			for (int i = 0; i < fen_string.size(); i++)
+				fen[i] = fen_string[i];
+
+			fen[fen_string.size()] = '\n';
+
+			// Check if the player has no legal moves (loss condition for the player)
+			if (board.generate_moves().empty())
+			{
+				cout << "You lose! hahahhahaha" << endl;
+				return; // Exit the game
+			}
+		}
+		else {
+			// If the move is illegal, display an error message
+			cout << "illigal move" << endl;
+		}
+	}
 }
 
 // Deklaracje nowych funkcji rozgrywki LAN dla trybu turowego
@@ -665,73 +722,98 @@ void playTurnBasedLanServer(atomic<char>*fen);
 void playTurnBasedLanClient(atomic<char>*fen);
 
 int main() {
-    atomic<char> fen[200];
+	// Create an atomic array to store the FEN string representing the current chessboard state
+	atomic<char> fen[200];
+
+	// Define the initial FEN string for the standard chess starting position
 	string fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+	// Copy the FEN string into the atomic array `fen`
 	for (int i = 0; i < fen_string.size(); i++)
 		fen[i] = fen_string[i];
 
+	// Add a newline character to mark the end of the FEN string
 	fen[fen_string.size()] = '\n';
-    thread t1([&]()
-        {
-            draw_board(fen);
-        });
 
-    t1.detach();
+	// Create a thread to render the chessboard based on the FEN string
+	thread t1([&]()
+		{
+			draw_board(fen); // Pass the FEN array to the draw_board function
+		});
 
-    string gameMode;
-    cout << "Wybierz tryb gry (bot/lan): ";
-    cin >> gameMode;
+	// Detach the thread so it runs independently of the main program
+	t1.detach();
 
-    if (gameMode == "bot") {
-        cout << "Wybrano tryb gry z botem." << endl;
+	// Prompt the user to choose a game mode (against a bot or in LAN mode)
+	string gameMode;
+	cout << "Wybierz tryb gry (bot/lan): ";
+	cin >> gameMode;
+
+	// Check if the user selected the "bot" game mode
+	if (gameMode == "bot") {
+		// Inform the user that bot mode was selected
+		cout << "Wybrano tryb gry z botem." << endl;
+
+		// Prompt the user to select the bot's difficulty level
 		cout << "Wybierz poziom trudności bota." << endl;
 		cout << "Poziomy trudności. 1440, 1620, 1780, 1930, 2060" << endl;
-		int liczba44;
+
+		int liczba44; // Variable to store the selected difficulty level
 		cin >> liczba44;
+
+		// Check the selected difficulty level and set the search depth (C) accordingly
 		if (liczba44 == 1440) {
-			C = 1;
-			playBot(fen);
+			C = 1; // Easy difficulty
+			playBot(fen); // Start the game against the bot
 		}
 		else if (liczba44 == 1620) {
-			C = 10;
+			C = 10; // Medium difficulty
 			playBot(fen);
 		}
 		else if (liczba44 == 1780) {
-			C = 100;
+			C = 100; // Hard difficulty
 			playBot(fen);
 		}
 		else if (liczba44 == 1930) {
-			C = 1000;
+			C = 1000; // Expert difficulty
 			playBot(fen);
 		}
 		else if (liczba44 == 2060) {
-			C = 5000;
+			C = 5000; // Master difficulty
 			playBot(fen);
 		}
 		else {
+			// Handle invalid difficulty levels
 			cout << "Nie ma takiego poziomu trudności" << endl;
 		}
-    }
-    else if (gameMode == "lan") {
-        string netMode;
-        cout << "Wybierz tryb polaczenia (server/client): ";
-        cin >> netMode;
+	}
+	// Check if the user selected the LAN game mode
+	else if (gameMode == "lan") {
+		// Prompt the user to choose server or client mode
+		string netMode;
+		cout << "Wybierz tryb polaczenia (server/client): ";
+		cin >> netMode;
 
-        if (netMode == "server") {
-            cout << "Uruchamiam serwer LAN (tryb turowy)..." << endl;
-            playTurnBasedLanServer(fen);
-        }
-        else if (netMode == "client") {
-            cout << "Uruchamiam klienta LAN (tryb turowy)..." << endl;
-            playTurnBasedLanClient(fen);
-        }
-        else {
-            cout << "Wybrano niepoprawny tryb połączenia." << endl;
-        }
-    }
-    else {
-        cout << "Nieznany tryb gry. Kończę działanie." << endl;
-    }
+		// Start the server mode for turn-based LAN gameplay
+		if (netMode == "server") {
+			cout << "Uruchamiam serwer LAN (tryb turowy)..." << endl;
+			playTurnBasedLanServer(fen); // Call the server function
+		}
+		// Start the client mode for turn-based LAN gameplay
+		else if (netMode == "client") {
+			cout << "Uruchamiam klienta LAN (tryb turowy)..." << endl;
+			playTurnBasedLanClient(fen); // Call the client function
+		}
+		else {
+			// Handle invalid connection modes
+			cout << "Wybrano niepoprawny tryb połączenia." << endl;
+		}
+	}
+	else {
+		// Handle unknown game modes
+		cout << "Nieznany tryb gry. Kończę działanie." << endl;
+	}
 
-    return 0;
+	return 0;
 }
+
