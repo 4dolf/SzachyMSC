@@ -6,6 +6,10 @@
 -Jeremiasz Gorawski / bug tester.  
 
 
+# Showcase  
+-"Showcase.mov and "Files.mov" files are files that show how your project should work 😄  
+
+
 # Known Issues:  
 -our program works with Visual Studio 2022  
 -our program does not work with Visual Studio Code  
