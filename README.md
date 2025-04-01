@@ -35,7 +35,7 @@ to avoid any problems while including glad and GLFW3 libraries it is advised to 
   -now when another window showed up use default settings and click finish.  
   -new settings should pop up on cmake and you still want to use deafult settings as your choise.  
   -click on configure than generate and wait fo it to finish.  
- ## In Visual Studio
+ ## In Visual Studio and files
  -go to C:path/to/your/folder/glfw-3.4/build folder next and from it open GLFW.sln in Visual Studio.  
  -in Visual Studio Solution Sxplorer right click on your GLFW solution file and select Build Solution or click f7.  
  -open glfw folder than src and debug.  
